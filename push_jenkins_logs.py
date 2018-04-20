@@ -13,7 +13,7 @@ FPASTE_URL = 'https://paste.fedoraproject.org/api/paste/submit'
 
 # commit log content in md file
 COMMIT_MD_FILE = 'commit_log.md'
-if os.environ['HOME']:
+if os.environ['WORKSPACE']:
     COMMIT_MD_FILE = '{}/{}'.format(os.environ['WORKSPACE'], COMMIT_MD_FILE)
 
 _PARSER = argparse.ArgumentParser()
