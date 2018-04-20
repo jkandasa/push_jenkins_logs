@@ -44,7 +44,8 @@ LOGS_URL = {}
 ICONS = {
     'SUCCESS': ':heavy_check_mark:',
     'FAILURE': ':red_circle:',
-    'UNATABLE': ':question:'
+    'UNATABLE': ':question:',
+    'ABORTED': ':black_circle:'
     }
 
 def _update_builds(console_log):
