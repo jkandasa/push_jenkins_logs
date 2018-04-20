@@ -55,7 +55,7 @@ def _update_builds(console_log):
             _update_builds(_build.get_console())
 
 def _get_status(_build):
-    return _build.get_status().upper
+    return _build.get_status().upper()
 
 def _get_jobs(console_log):
     pattern = re.compile(r'[\w-]+ #\d+')
