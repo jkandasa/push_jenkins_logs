@@ -10,7 +10,7 @@ from jenkinsapi.jenkins import Jenkins
 # fpast url
 FPASTE_URL = 'https://paste.fedoraproject.org/api/paste/submit'
 
-# commit content in md file
+# commit log content in md file
 COMMIT_MD_FILE = 'commit_log.md'
 
 _PARSER = argparse.ArgumentParser()
@@ -31,6 +31,9 @@ JENKINS = Jenkins(
     _ARGS.hostname, username=_ARGS.username, password=_ARGS.password, ssl_verify=_ARGS.ssl_verify)
 # get build details
 BUILD = JENKINS[_ARGS.job_name].get_build(buildnumber=_ARGS.build_number)
+
+# print Jenkins details
+print 'Jenkins Version: {}'.format(JENKINS.version)
 
 # create dict to hold nested builds and it is status
 ALL_BUILDS = OrderedDict()
