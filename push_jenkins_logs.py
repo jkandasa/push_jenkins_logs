@@ -1,6 +1,7 @@
 """This program collects Jenkins builds and posts the console log to fpaste.org"""
 import argparse
 import json
+import os
 import re
 from collections import OrderedDict
 
@@ -12,6 +13,8 @@ FPASTE_URL = 'https://paste.fedoraproject.org/api/paste/submit'
 
 # commit log content in md file
 COMMIT_MD_FILE = 'commit_log.md'
+if os.environ['HOME']:
+    COMMIT_MD_FILE = '{}/{}'.format(os.environ['WORKSPACE'], COMMIT_MD_FILE)
 
 _PARSER = argparse.ArgumentParser()
 _PARSER.add_argument(
