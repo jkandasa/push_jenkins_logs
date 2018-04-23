@@ -15,7 +15,7 @@ source .env/bin/activate
 pip install -r requirements.txt
 
 # execute python code to publish console logs 
-python push_jenkins_logs.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER}
+python publish_jenkins_console.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER}
 
 # print commit file content
 cat ${WORKSPACE}/commit_log.md
