@@ -108,8 +108,9 @@ for _name, _number in ALL_BUILDS.items():
         print '{} #{} => {}'.format(_name, _number, _url)
         LOGS_URL[_name] = _url
 # formate commit log to upload on GitHub
-_FINAL_LOG = '{} Jenkins CI build [#{}]({})'.format(
-    ICONS[BUILD_STATUS[_ARGS.job_name]], _ARGS.build_number, LOGS_URL[_ARGS.job_name])
+_FINAL_LOG = '{} Jenkins CI: {} [#{}]({})'.format(
+    ICONS[BUILD_STATUS[_ARGS.job_name]], _ARGS.job_name, _ARGS.build_number,
+    LOGS_URL[_ARGS.job_name])
 for _j_name, _j_number in ALL_BUILDS.items():
     if _j_name != _ARGS.job_name:
         _FINAL_LOG = _FINAL_LOG + '\n*  {} {} [#{}]({})'.format(

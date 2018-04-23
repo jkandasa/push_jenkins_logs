@@ -22,3 +22,5 @@ cat ${WORKSPACE}/commit_log.md
 
 # back to user location
 cd ${USER_LOCATION}
+
+echo -e "\n*** End of publish logs ***\n"
