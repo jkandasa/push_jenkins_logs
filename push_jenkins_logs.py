@@ -51,6 +51,7 @@ ICONS = {
     'ABORTED': ':black_circle:'
     }
 
+
 def _update_builds(console_log):
     for _job in _get_jobs(console_log):
         _name, _id = _job.split(' #')
@@ -61,16 +62,20 @@ def _update_builds(console_log):
             BUILD_STATUS[_name] = _get_status(_build)
             _update_builds(_build.get_console())
 
+
 def _get_status(_build):
     return _build.get_status().upper()
+
 
 def _get_jobs(console_log):
     pattern = re.compile(r'[\w-]+ #\d+')
     data = pattern.findall(console_log)
     return data
 
+
 def _get_build(_name, _number):
     return JENKINS[_name].get_build(buildnumber=_number)
+
 
 def _upload_console_log(_name, _number):
     _content = _get_build(_name, _number).get_console().replace('\n', '\n')
@@ -84,6 +89,7 @@ def _upload_console_log(_name, _number):
         print('Failed to push the data for the job[name:{}, build_number:{}]'.format(
             _name, _number))
     return _url
+
 
 # update primary build to dict
 ALL_BUILDS[_ARGS.job_name] = _ARGS.build_number
@@ -109,8 +115,7 @@ for _j_name, _j_number in ALL_BUILDS.items():
         _FINAL_LOG = _FINAL_LOG + '\n*  {} {} [#{}]({})'.format(
             ICONS[BUILD_STATUS[_j_name]], _j_name, _j_number, LOGS_URL[_j_name])
 # write formatted log into a file
-_FILE = open(COMMIT_MD_FILE, "w")
-_FILE.write(_FINAL_LOG)
-_FILE.close()
-# print final commit content
-print '{}:\n--------------\n{}\n'.format(COMMIT_MD_FILE, _FINAL_LOG)
+with open(COMMIT_MD_FILE, mode="w") as _FILE:
+    _FILE.write(_FINAL_LOG)
+# print commit content file location
+print '\nCommit content file: {}\n'.format(COMMIT_MD_FILE)
