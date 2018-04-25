@@ -2,6 +2,8 @@
 Publish Jenkins console logs to fpaste.org.
 Pass primary job name and build number. Takes all other dependent jobs consoles and publish it on fpaste.org
 
+**IMPORTANT:** Job name should satisfy this pattern: `[\w-]+`
+
 
 #### Script to be called on Jenkins post run:
 ```
