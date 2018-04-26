@@ -17,8 +17,8 @@ pip install -r requirements.txt
 # execute python code to publish console logs 
 python publish_jenkins_console.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER}
 
-# print commit file content
-cat ${WORKSPACE}/commit_log.md
+# print comment file content
+cat ${WORKSPACE}/build_comment_log.md
 
 # back to user location
 cd ${USER_LOCATION}

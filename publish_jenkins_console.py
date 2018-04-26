@@ -11,10 +11,10 @@ from jenkinsapi.jenkins import Jenkins
 # fpast url
 FPASTE_URL = 'https://paste.fedoraproject.org/api/paste/submit'
 
-# commit log content in md file
-COMMIT_MD_FILE = 'commit_log.md'
+# comment log content in md file
+COMMENT_MD_FILE = 'build_comment_log.md'
 if 'WORKSPACE' in os.environ:
-    COMMIT_MD_FILE = '{}/{}'.format(os.environ['WORKSPACE'], COMMIT_MD_FILE)
+    COMMENT_MD_FILE = '{}/{}'.format(os.environ['WORKSPACE'], COMMENT_MD_FILE)
 
 _PARSER = argparse.ArgumentParser()
 _PARSER.add_argument(
@@ -107,7 +107,7 @@ for _name, _number in ALL_BUILDS.items():
     if _url:
         print '{} #{} => {}'.format(_name, _number, _url)
         LOGS_URL[_name] = _url
-# formate commit log to upload on GitHub
+# formate comment log to upload on GitHub
 _FINAL_LOG = '{} Jenkins CI: {} [#{}]({})'.format(
     ICONS[BUILD_STATUS[_ARGS.job_name]], _ARGS.job_name, _ARGS.build_number,
     LOGS_URL[_ARGS.job_name])
@@ -116,7 +116,7 @@ for _j_name, _j_number in ALL_BUILDS.items():
         _FINAL_LOG = _FINAL_LOG + '\n*  {} {} [#{}]({})'.format(
             ICONS[BUILD_STATUS[_j_name]], _j_name, _j_number, LOGS_URL[_j_name])
 # write formatted log into a file
-with open(COMMIT_MD_FILE, mode="w") as _FILE:
+with open(COMMENT_MD_FILE, mode="w") as _FILE:
     _FILE.write(_FINAL_LOG)
-# print commit content file location
-print '\nCommit content file: {}\n'.format(COMMIT_MD_FILE)
+# print comment content file location
+print '\nBuild comment content file: {}\n'.format(COMMENT_MD_FILE)
