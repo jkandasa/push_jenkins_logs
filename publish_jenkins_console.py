@@ -113,7 +113,7 @@ _FINAL_LOG = '{} Jenkins CI: {} [#{}]({})'.format(
     LOGS_URL[_ARGS.job_name])
 for _j_name, _j_number in ALL_BUILDS.items():
     if _j_name != _ARGS.job_name:
-        _FINAL_LOG = _FINAL_LOG + '\n*  {} {} [#{}]({})'.format(
+        _FINAL_LOG = _FINAL_LOG + '\n  * {} {} [#{}]({})'.format(
             ICONS[BUILD_STATUS[_j_name]], _j_name, _j_number, LOGS_URL[_j_name])
 # write formatted log into a file
 with open(COMMENT_MD_FILE, mode="w") as _FILE:
