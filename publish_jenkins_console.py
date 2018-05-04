@@ -25,6 +25,9 @@ _PARSER.add_argument('--password', '-P', help="Password of the server", type=str
 _PARSER.add_argument('--ssl_verify', '-ssl', help="Verify SSL", type=bool, default=False)
 _PARSER.add_argument('--job_name', '-jn', help="Jenkins job name", type=str, required=True)
 _PARSER.add_argument('--build_number', '-bn', help="Build number", type=int, required=True)
+_PARSER.add_argument(
+    '--filter', '-f', help="Regular expression to filter jobs",
+    type=str, default=r'[\w-]+ #\d+')
 
 # receive arguments from command line
 _ARGS = _PARSER.parse_args()
@@ -68,7 +71,7 @@ def _get_status(_build):
 
 
 def _get_jobs(console_log):
-    pattern = re.compile(r'[\w-]+ #\d+')
+    pattern = re.compile(_ARGS.filter)
     data = pattern.findall(console_log)
     return data
 
