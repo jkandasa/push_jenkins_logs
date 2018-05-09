@@ -38,6 +38,9 @@ JENKINS = Jenkins(
 # get build details
 BUILD = JENKINS[_ARGS.job_name].get_build(buildnumber=_ARGS.build_number)
 
+# print job filter pattern
+print 'Job Filter pattern: "{}"'.format(_ARGS.filter)
+
 # print Jenkins details
 print 'Jenkins Version: {}'.format(JENKINS.version)
 

@@ -14,8 +14,13 @@ source .env/bin/activate
 # install requirements
 pip install -r requirements.txt
 
+# set Job filter if it is not available
+if [[ -z "${JOB_FILTER}" ]]; then
+  JOB_FILTER="[\w-]+ #\d+"
+fi
+
 # execute python code to publish console logs 
-python publish_jenkins_console.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER} -f ${JOB_FILTER}
+python publish_jenkins_console.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER} -f "${JOB_FILTER}"
 
 # print comment file content
 cat ${WORKSPACE}/build_comment_log.md
