@@ -1,1 +1,1 @@
-jenkinsapi
+jenkinsapi==0.3.6

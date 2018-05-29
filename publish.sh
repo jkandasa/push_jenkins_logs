@@ -7,12 +7,8 @@ ACTUAL_LOCATION=`dirname $0`
 # Change the location to where exactly python files are located
 cd ${ACTUAL_LOCATION}
 
-# create virtual envirnment and activate
-virtualenv .env
-source .env/bin/activate
-
 # install requirements
-pip install -r requirements.txt
+sudo pip install -r requirements.txt
 
 # set Job filter if it is not available
 if [[ -z "${JOB_FILTER}" ]]; then
