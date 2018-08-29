@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 import re
-from collections import defaultdict
+from collections import OrderedDict
 
 import requests
 from jenkinsapi.jenkins import Jenkins
@@ -45,7 +45,7 @@ print 'Job Filter pattern: "{}"'.format(_ARGS.filter)
 print 'Jenkins Version: {}'.format(JENKINS.version)
 
 # create dict to hold nested builds and it is status
-ALL_BUILDS = defaultdict(set)
+ALL_BUILDS = OrderedDict()
 BUILD_STATUS = {}
 LOGS_URL = {}
 # list of supported emojis in GitHub
@@ -63,6 +63,8 @@ def _update_builds(console_log):
         _name, _id = _job.split(' #')
         _id = int(_id)
         if _name in JENKINS.keys():
+            if _name not in ALL_BUILDS:
+                ALL_BUILDS[_name] = set()
             ALL_BUILDS[_name].add(_id)
             _build = _get_build(_name, _id)
             _update_builds(_build.get_console())
@@ -76,9 +78,8 @@ def _update_build_statuses():
             _status = _get_status(_build)
             if _status == 'FAILURE':
                 BUILD_STATUS[_name] = _status
-            if _status == 'UNSTABLE' and BUILD_STATUS[_name] != 'FAILURE':
-                BUILD_STATUS[_name] = _status
-            if _status == 'ABORTED' and BUILD_STATUS[_name] != 'FAILURE':
+                break
+            elif _status != 'SUCCESS':
                 BUILD_STATUS[_name] = _status
 
 
@@ -113,6 +114,7 @@ def _upload_console_log(_name, _ids):
 
 
 # update primary build to dict
+ALL_BUILDS[_ARGS.job_name] = set()
 ALL_BUILDS[_ARGS.job_name].add(_ARGS.build_number)
 # update primary build status
 BUILD_STATUS[_ARGS.job_name] = _get_status(BUILD)
@@ -126,18 +128,22 @@ print BUILD_STATUS
 
 # upload console logs to fpaste
 for _name, _ids in ALL_BUILDS.items():
-    _url = _upload_console_log(_name, _ids)
+    # convert to list to have nicer print output
+    _ids_list = list(_ids)
+    _url = _upload_console_log(_name, _ids_list)
     if _url:
-        print '{} #{} => {}'.format(_name, _ids, _url)
+        print '{} #{} => {}'.format(_name, _ids_list, _url)
         LOGS_URL[_name] = _url
 # formate comment log to upload on GitHub
 _FINAL_LOG = '{} Jenkins CI: {} [#{}]({})'.format(
     ICONS[BUILD_STATUS[_ARGS.job_name]], _ARGS.job_name, _ARGS.build_number,
     LOGS_URL[_ARGS.job_name])
 for _j_name, _j_ids in ALL_BUILDS.items():
+    # convert to list to have nicer print output
+    _j_ids_list = list(_j_ids)
     if _j_name != _ARGS.job_name:
         _FINAL_LOG = _FINAL_LOG + '\n  * {} {} [#{}]({})'.format(
-            ICONS[BUILD_STATUS[_j_name]], _j_name, _j_ids, LOGS_URL[_j_name])
+            ICONS[BUILD_STATUS[_j_name]], _j_name, _j_ids_list, LOGS_URL[_j_name])
 # write formatted log into a file
 with open(COMMENT_MD_FILE, mode="w") as _FILE:
     _FILE.write(_FINAL_LOG)
