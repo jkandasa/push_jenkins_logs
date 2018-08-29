@@ -53,7 +53,7 @@ LOGS_URL = {}
 ICONS = {
     'SUCCESS': ':heavy_check_mark:',
     'FAILURE': ':red_circle:',
-    'UNATABLE': ':question:',
+    'UNSTABLE': ':question:',
     'ABORTED': ':black_circle:'
     }
 
@@ -63,10 +63,24 @@ def _update_builds(console_log):
         _name, _id = _job.split(' #')
         _id = int(_id)
         if _name in JENKINS.keys():
-            ALL_BUILDS[_name] = _id
+            if _name not in ALL_BUILDS:
+                ALL_BUILDS[_name] = set()
+            ALL_BUILDS[_name].add(_id)
             _build = _get_build(_name, _id)
-            BUILD_STATUS[_name] = _get_status(_build)
             _update_builds(_build.get_console())
+
+
+def _update_build_statuses():
+    for _name, _ids in ALL_BUILDS.items():
+        BUILD_STATUS[_name] = 'SUCCESS'
+        for _id in _ids:
+            _build = _get_build(_name, _id)
+            _status = _get_status(_build)
+            if _status == 'FAILURE':
+                BUILD_STATUS[_name] = _status
+                break
+            elif _status != 'SUCCESS':
+                BUILD_STATUS[_name] = _status
 
 
 def _get_status(_build):
@@ -83,9 +97,11 @@ def _get_build(_name, _number):
     return JENKINS[_name].get_build(buildnumber=_number)
 
 
-def _upload_console_log(_name, _number):
-    _content = _get_build(_name, _number).get_console().replace('\n', '\n')
-    _data = {'title': '{}: #{}'.format(_name, _number), 'contents': _content}
+def _upload_console_log(_name, _ids):
+    _content = ""
+    for _id in _ids:
+        _content += _get_build(_name, _id).get_console().replace('\n', '\n')
+    _data = {'title': '{}: #{}'.format(_name, _ids), 'contents': _content}
     _response = requests.post(
         FPASTE_URL, headers={'Content-Type': 'application/json'}, data=json.dumps(_data))
     _url = None
@@ -93,34 +109,41 @@ def _upload_console_log(_name, _number):
         _url = _response.json()['url']
     else:
         print('Failed to push the data for the job[name:{}, build_number:{}]'.format(
-            _name, _number))
+            _name, _ids))
     return _url
 
 
 # update primary build to dict
-ALL_BUILDS[_ARGS.job_name] = _ARGS.build_number
+ALL_BUILDS[_ARGS.job_name] = set()
+ALL_BUILDS[_ARGS.job_name].add(_ARGS.build_number)
 # update primary build status
 BUILD_STATUS[_ARGS.job_name] = _get_status(BUILD)
 # update nested build details
 _update_builds(BUILD.get_console())
+# update status of all builds
+_update_build_statuses()
 # print details on console
 print ALL_BUILDS
 print BUILD_STATUS
 
 # upload console logs to fpaste
-for _name, _number in ALL_BUILDS.items():
-    _url = _upload_console_log(_name, _number)
+for _name, _ids in ALL_BUILDS.items():
+    # convert to list to have nicer print output
+    _ids_list = list(_ids)
+    _url = _upload_console_log(_name, _ids_list)
     if _url:
-        print '{} #{} => {}'.format(_name, _number, _url)
+        print '{} #{} => {}'.format(_name, _ids_list, _url)
         LOGS_URL[_name] = _url
 # formate comment log to upload on GitHub
 _FINAL_LOG = '{} Jenkins CI: {} [#{}]({})'.format(
     ICONS[BUILD_STATUS[_ARGS.job_name]], _ARGS.job_name, _ARGS.build_number,
     LOGS_URL[_ARGS.job_name])
-for _j_name, _j_number in ALL_BUILDS.items():
+for _j_name, _j_ids in ALL_BUILDS.items():
+    # convert to list to have nicer print output
+    _j_ids_list = list(_j_ids)
     if _j_name != _ARGS.job_name:
         _FINAL_LOG = _FINAL_LOG + '\n  * {} {} [#{}]({})'.format(
-            ICONS[BUILD_STATUS[_j_name]], _j_name, _j_number, LOGS_URL[_j_name])
+            ICONS[BUILD_STATUS[_j_name]], _j_name, _j_ids_list, LOGS_URL[_j_name])
 # write formatted log into a file
 with open(COMMENT_MD_FILE, mode="w") as _FILE:
     _FILE.write(_FINAL_LOG)
