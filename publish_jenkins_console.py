@@ -28,6 +28,9 @@ _PARSER.add_argument('--build_number', '-bn', help="Build number", type=int, req
 _PARSER.add_argument(
     '--filter', '-f', help="Regular expression to filter jobs",
     type=str, default=r'[\w-]+ #\d+')
+_PARSER.add_argument(
+    '--filter_output', '-fo', help="Regular expression to filter output",
+    type=str, default=r'[\w-]+')
 
 # receive arguments from command line
 _ARGS = _PARSER.parse_args()
@@ -40,6 +43,9 @@ BUILD = JENKINS[_ARGS.job_name].get_build(buildnumber=_ARGS.build_number)
 
 # print job filter pattern
 print 'Job Filter pattern: "{}"'.format(_ARGS.filter)
+
+# print output filter pattern
+print 'Output Filter pattern: "{}"'.format(_ARGS.filter_output)
 
 # print Jenkins details
 print 'Jenkins Version: {}'.format(JENKINS.version)
@@ -135,15 +141,21 @@ for _name, _ids in ALL_BUILDS.items():
         print '{} #{} => {}'.format(_name, _ids_list, _url)
         LOGS_URL[_name] = _url
 # formate comment log to upload on GitHub
-_FINAL_LOG = '{} Jenkins CI: {} [#{}]({})'.format(
-    ICONS[BUILD_STATUS[_ARGS.job_name]], _ARGS.job_name, _ARGS.build_number,
+_FINAL_LOG = 'Jenkins CI: {} [#{}]({})'.format(
+    _ARGS.job_name, _ARGS.build_number,
     LOGS_URL[_ARGS.job_name])
+_LOG_EXISTS = False
+_output_pattern = re.compile(_ARGS.filter_output)
 for _j_name, _j_ids in ALL_BUILDS.items():
     # convert to list to have nicer print output
     _j_ids_list = list(_j_ids)
-    if _j_name != _ARGS.job_name:
+    if _j_name != _ARGS.job_name and _output_pattern.match(_j_name):
+        _LOG_EXISTS = True
         _FINAL_LOG = _FINAL_LOG + '\n  * {} {} [#{}]({})'.format(
             ICONS[BUILD_STATUS[_j_name]], _j_name, _j_ids_list, LOGS_URL[_j_name])
+if not _LOG_EXISTS:
+    _FINAL_LOG = _FINAL_LOG + '\n {} PRT Failed, Please Contact QE'.format(
+        ICONS['FAILURE'])
 # write formatted log into a file
 with open(COMMENT_MD_FILE, mode="w") as _FILE:
     _FILE.write(_FINAL_LOG)
