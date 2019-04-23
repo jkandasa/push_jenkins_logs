@@ -3,9 +3,11 @@ import argparse
 import json
 import os
 import re
+import sys
 from collections import OrderedDict
 
 import requests
+from requests.exceptions import ConnectionError
 from jenkinsapi.jenkins import Jenkins
 
 # fpast url
@@ -38,8 +40,14 @@ _ARGS = _PARSER.parse_args()
 # create Jenkins server client
 JENKINS = Jenkins(
     _ARGS.hostname, username=_ARGS.username, password=_ARGS.password, ssl_verify=_ARGS.ssl_verify)
-# get build details
-BUILD = JENKINS[_ARGS.job_name].get_build(buildnumber=_ARGS.build_number)
+try:
+    # get build details
+    BUILD = JENKINS[_ARGS.job_name].get_build(buildnumber=_ARGS.build_number)
+except ConnectionError as e:
+    print(e)
+    with open(COMMENT_MD_FILE, mode="w") as _FILE:
+        _FILE.write('PRT Failed, Please Contact QE')
+    sys.exit()
 
 # print job filter pattern
 print 'Job Filter pattern: "{}"'.format(_ARGS.filter)
