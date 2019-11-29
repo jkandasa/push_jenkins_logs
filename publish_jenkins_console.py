@@ -79,6 +79,9 @@ def _update_builds(console_log):
         if _name in JENKINS.keys():
             if _name not in ALL_BUILDS:
                 ALL_BUILDS[_name] = set()
+            # cover cases when the console log contains refrence to itself which would lead to endless recursion
+            if _id in ALL_BUILDS[_name]:
+                continue
             ALL_BUILDS[_name].add(_id)
             _build = _get_build(_name, _id)
             _update_builds(_build.get_console())
