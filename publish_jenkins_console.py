@@ -7,11 +7,12 @@ import sys
 from collections import OrderedDict
 
 import requests
+import urllib
 from requests.exceptions import ConnectionError
 from jenkinsapi.jenkins import Jenkins
 
-# fpast url
-FPASTE_URL = 'https://paste.fedoraproject.org/api/paste/submit'
+APIKEY = urllib.urlencode({'apikey': '5uZ30dTZE1a5V0WYhNwcMddBRDpk6UzuzMu-APKM38iMHacxdA0n4vCqA34avNyt'})
+FPASTE_URL = 'https://paste.centos.org/api/create?' + APIKEY
 
 # comment log content in md file
 COMMENT_MD_FILE = 'build_comment_log.md'
@@ -115,12 +116,12 @@ def _upload_console_log(_name, _ids):
     _content = ""
     for _id in _ids:
         _content += _get_build(_name, _id).get_console().replace('\n', '\n')
-    _data = {'title': '{}: #{}'.format(_name, _ids), 'contents': _content}
+    _data = urllib.urlencode({'title': '{}: #{}'.format(_name, _ids), 'text': _content})
     _response = requests.post(
-        FPASTE_URL, headers={'Content-Type': 'application/json'}, data=json.dumps(_data))
+        FPASTE_URL, headers={'Content-Type': 'application/x-www-form-urlencoded'}, data=_data.encode('ascii'))
     _url = None
     if _response.status_code == 200:
-        _url = _response.json()['url']
+        _url = _response.text
     else:
         print('Failed to push the data for the job[name:{}, build_number:{}]'.format(
             _name, _ids))
