@@ -11,6 +11,7 @@ import urllib
 from requests.exceptions import ConnectionError
 from jenkinsapi.jenkins import Jenkins
 
+# api key copied from: https://pagure.io/fpaste/blob/513d53d67502a2f21abe5d9b868b79dc53bc3a76/f/fpaste#_34
 APIKEY = urllib.urlencode({'apikey': '5uZ30dTZE1a5V0WYhNwcMddBRDpk6UzuzMu-APKM38iMHacxdA0n4vCqA34avNyt'})
 FPASTE_URL = 'https://paste.centos.org/api/create?' + APIKEY
 
