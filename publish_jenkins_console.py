@@ -29,6 +29,7 @@ _PARSER.add_argument('--password', '-P', help="Password of the server", type=str
 _PARSER.add_argument('--ssl_verify', '-ssl', help="Verify SSL", type=bool, default=False)
 _PARSER.add_argument('--job_name', '-jn', help="Jenkins job name", type=str, required=True)
 _PARSER.add_argument('--build_number', '-bn', help="Build number", type=int, required=True)
+_PARSER.add_argument('--omit_success_logs', '-ol', help="Whether to omit logs of successful builds", action="store_true")
 _PARSER.add_argument(
     '--filter', '-f', help="Regular expression to filter jobs",
     type=str, default=r'[\w-]+ #\d+')
@@ -119,17 +120,41 @@ def _get_build(_name, _number):
 def _upload_console_log(_name, _ids):
     _content = ""
     for _id in _ids:
-        _content += _get_build(_name, _id).get_console().replace('\n', '\n')
-    _data = urllib.urlencode({'title': '{}: #{}'.format(_name, _ids), 'text': _content})
-    _response = requests.post(
-        FPASTE_URL, headers={'Content-Type': 'application/x-www-form-urlencoded'}, data=_data.encode('ascii'))
-    _url = None
-    if _response.status_code == 200:
-        _url = _response.text
-    else:
-        print('Failed to push the data for the job[name:{}, build_number:{}]'.format(
-            _name, _ids))
-    return _url
+        _build = _get_build(_name, _id)
+        if _ARGS.omit_success_logs and _get_status(_build) == 'SUCCESS':
+            print("Omitting log for job: {}, run: {}".format(_name,_id))
+            continue
+        _content += _build.get_console().replace('\n', '\n')
+    if len(_content) == 0:
+        return None
+
+    # check data size
+    _data = urllib.urlencode({'title': '{}: #{} part {}'.format(_name, _ids, 1),
+        'text': _content,
+        'expire': '1440', # 1day
+        'lang' : 'text'})
+    # 512KiB appears to be the current hard limit (20110404); old limit was 16MiB
+    _pasteSizeKiB = len(_data)/1024.0
+    if _pasteSizeKiB > 512:
+        print("Warning: Paste size is big ({}KiB), pastes > 512KiB are not allowed, dividing to multiple pastes...".format(_pasteSizeKiB))
+
+    # divide and upload in chunks
+    _n = 512 * 1024
+    _chunks = [_content[i:i+_n] for i in range(0, len(_content), _n)]
+    _urls = ""
+    for i in range(len(_chunks)):
+        _data = urllib.urlencode({'title': '{}: #{} part {}'.format(_name, _ids, i + 1),
+            'text': _chunks[i],
+            'expire': '1440', # 1day
+            'lang' : 'text'})
+        _response = requests.post(
+            FPASTE_URL, headers={'Content-Type': 'application/x-www-form-urlencoded'}, data=_data.encode('ascii'))
+        if _response.status_code == 200:
+            _urls += _response.text.rstrip() + " "
+        else:
+            print('Failed to push the data for the job[name:{}, build_number:{}, response: {}]'.format(
+                _name, _ids, _response.text.encode(encoding="utf-8", errors="ignore")))
+    return _urls
 
 
 # update primary build to dict
@@ -150,9 +175,10 @@ for _name, _ids in ALL_BUILDS.items():
     # convert to list to have nicer print output
     _ids_list = list(_ids)
     _url = _upload_console_log(_name, _ids_list)
-    if _url:
-        print '{} #{} => {}'.format(_name, _ids_list, _url)
-        LOGS_URL[_name] = _url
+    if not _url:
+        _url = "Log omitted"
+    print '{} #{} => {}'.format(_name, _ids_list, _url)
+    LOGS_URL[_name] = _url
 # formate comment log to upload on GitHub
 _FINAL_LOG = 'Jenkins CI: {} [#{}]({})'.format(
     _ARGS.job_name, _ARGS.build_number,
