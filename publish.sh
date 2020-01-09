@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# set default value
+OMIT_SUCCESSFUL_LOGS=${OMIT_SUCCESSFUL_LOGS:-false}
+
 # Get user current location
 USER_LOCATION=$PWD
 ACTUAL_LOCATION=`dirname $0`
@@ -16,7 +19,12 @@ if [[ -z "${JOB_FILTER}" ]]; then
 fi
 
 # execute python code to publish console logs 
-python publish_jenkins_console.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER} -f "${JOB_FILTER}" -fo "${OUTPUT_FILTER}"
+if [ "${OMIT_SUCCESSFUL_LOGS}" == "true" ]
+then
+  python publish_jenkins_console.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER} -f "${JOB_FILTER}" -fo "${OUTPUT_FILTER}" -ol
+else
+  python publish_jenkins_console.py -H ${JENKINS_URL} -jn ${JOB_NAME} -bn ${BUILD_NUMBER} -f "${JOB_FILTER}" -fo "${OUTPUT_FILTER}"
+fi
 
 # print comment file content
 cat ${WORKSPACE}/build_comment_log.md
